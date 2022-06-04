@@ -19,8 +19,8 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       routes: {
-        "green":(_)=>const GreenScreen(),
-        "red":(_)=>const RedScreen(),
+        "green": (_) => const GreenScreen(),
+        "red": (_) => const RedScreen(),
       },
       title: 'Flutter Demo',
       theme: ThemeData(
@@ -42,15 +42,24 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   int _counter = 0;
+
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
     FirebaseMessaging.instance.getInitialMessage();
+
     //foreground
     FirebaseMessaging.onMessage.listen((message) {
       print(message.notification?.body);
       print(message.notification?.title);
+    });
+
+    //when user tas on the notification , conditions when this will work: app background app open
+    FirebaseMessaging.onMessageOpenedApp.listen((message) {
+      final routeFromMessage = message.data["route"];
+      Navigator.of(context).pushNamed(routeFromMessage);
+      print(routeFromMessage);
     });
   }
 
