@@ -3,12 +3,21 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:notifications_demo/firebase_options.dart';
 import 'package:notifications_demo/green_screen.dart';
+import 'package:notifications_demo/services/local_notif_service.dart';
+
+//recieve message when app is in background
+Future<void> backgroundHandler(RemoteMessage message) async {
+  print(message.data);
+  print(message.notification?.title);
+}
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+  FirebaseMessaging.onBackgroundMessage(backgroundHandler);
   runApp(const MyApp());
 }
 
@@ -45,14 +54,21 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   void initState() {
-    // TODO: implement initState
+    LocalNotifService.initialize(context);
     super.initState();
-    FirebaseMessaging.instance.getInitialMessage();
+    //gives u the message on which user taps and opens app from terminated state
+    FirebaseMessaging.instance.getInitialMessage().then((message) {
+      if (message != null) {
+        final routeFromMessage = message.data["route"];
+        Navigator.of(context).pushNamed(routeFromMessage);
+      }
+    });
 
     //foreground
     FirebaseMessaging.onMessage.listen((message) {
       print(message.notification?.body);
       print(message.notification?.title);
+      LocalNotifService.display(message);
     });
 
     //when user tas on the notification , conditions when this will work: app background app open
